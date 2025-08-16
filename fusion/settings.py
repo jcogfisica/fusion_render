@@ -229,7 +229,7 @@ PICTURES = {
     # Formatos suportados
     "PIXEL_DENSITIES": [1],
     # Densidade de pixels (1x, 2x etc.)
-    "USE_PLACEHOLDERS": False,
+    "USE_PLACEHOLDERS": True,
     # Cria placeholders para melhor UX ao carregar imagens
 }
 
