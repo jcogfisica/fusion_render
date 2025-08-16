@@ -214,7 +214,7 @@ ROOT_URLCONF = 'fusion.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ['templates'],  # procura templates fora dos apps
+        'DIRS': [BASE_DIR / 'templates'],  # procura templates fora dos apps
         'APP_DIRS': True,  # procura templates dentro de cada app
         'OPTIONS': {
             'context_processors': [
