@@ -145,7 +145,7 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 # =============================================
 MIDDLEWARE = [
-    "core.middleware.RequestLoggerMiddleware",  # <-- adicionado
+    "core.middleware.DebugIndexMiddleware",  # <-- adicionado
 
     'django.middleware.security.SecurityMiddleware',
     # Middleware de segurança do Django.
