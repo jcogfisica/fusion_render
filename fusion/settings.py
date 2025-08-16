@@ -229,7 +229,7 @@ PICTURES = {
     # Formatos suportados
     "PIXEL_DENSITIES": [1],
     # Densidade de pixels (1x, 2x etc.)
-    "USE_PLACEHOLDERS": True,
+    "USE_PLACEHOLDERS": False,
     # Cria placeholders para melhor UX ao carregar imagens
 }
 
@@ -420,7 +420,7 @@ else:
 
     # ---------- FIM DA CONFIGURAÇÃO CONDICIONAL PARA AMBIENTES ----------
 
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     LOGOUT_REDIRECT_URL = 'index'
 
     # Comentários adicionais:
