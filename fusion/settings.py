@@ -20,10 +20,6 @@ from google.oauth2 import service_account
 # Cria objetos de credenciais do Google Cloud a partir de arquivos JSON de Service Account
 # Necessário para autenticar uploads para GCS
 
-import tempfile
-
-# Criação de arquivos temporários seguros, caso seja necessário materializar credenciais
-
 # =============================================
 # BASE_DIR
 # =============================================
