@@ -62,7 +62,7 @@ DEBUG = not RENDER
 # DEBUG=True em dev: mostra erros detalhados, permite runserver servir arquivos estáticos
 # DEBUG=False em prod: oculta erros, obrigatório por segurança
 
-ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['*'] # ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 # Inicializa a lista de domínios/hosts que o Django aceitará para requisições HTTP
 # Evita ataques do tipo "Host header injection" ao recusar requests vindos de domínios não autorizados
 """
