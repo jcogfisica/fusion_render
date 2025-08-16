@@ -182,6 +182,9 @@ MIDDLEWARE = [
     # Middleware anti-clickjacking.
     # Adiciona o header X-Frame-Options para evitar que páginas do site sejam exibidas dentro de iframes de terceiros.
     # Normalmente configurado como SAMEORIGIN.
+
+    # Adicione aqui o middleware de debug TEMPORÁRIO
+    'core.middleware.DebugMiddleware',  # <-- caminho para a sua classe DebugMiddleware
 ]
 
 # Middleware processa cada request/response
