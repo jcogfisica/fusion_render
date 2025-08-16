@@ -1,0 +1,26 @@
+databases:
+  - name: fusion
+    databaseName: fusion
+    user: fusion_user
+    plan: free
+
+services:
+  - type: web
+    plan: free
+    name: mysite
+    runtime: python
+    buildCommand: ./build.sh
+    startCommand: "gunicorn fusion.wsgi:application"
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fusion
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: RENDER
+        value: 'TRUE'  # Necessário para identificar o ambiente de produção no settings.py
+      # - key: GOOGLE_APPLICATION_CREDENTIALS_JSON
+        # fromEnvGroup: Django2_render_var_ambiente
