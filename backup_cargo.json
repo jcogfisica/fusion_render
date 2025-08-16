@@ -1,1 +1,23 @@
-[{"model": "core.cargo", "pk": 1, "fields": {"criado": "2025-08-15T13:50:55.683Z", "modificado": "2025-08-15T13:50:55.683Z", "ativo": true, "cargo": "Estagißrio"}}, {"model": "core.cargo", "pk": 2, "fields": {"criado": "2025-08-15T13:51:06.396Z", "modificado": "2025-08-15T13:51:06.396Z", "ativo": true, "cargo": "Programador Backend"}}, {"model": "core.cargo", "pk": 3, "fields": {"criado": "2025-08-15T13:51:17.910Z", "modificado": "2025-08-15T13:51:17.910Z", "ativo": true, "cargo": "Designer Grßfico"}}]
+[
+  {
+    "id": 1,
+    "criado": "2025-08-15T13:50:55.683932+00:00",
+    "modificado": "2025-08-15T13:50:55.683942+00:00",
+    "ativo": true,
+    "cargo": "Estagiário"
+  },
+  {
+    "id": 2,
+    "criado": "2025-08-15T13:51:06.396187+00:00",
+    "modificado": "2025-08-15T13:51:06.396197+00:00",
+    "ativo": true,
+    "cargo": "Programador Backend"
+  },
+  {
+    "id": 3,
+    "criado": "2025-08-15T13:51:17.910827+00:00",
+    "modificado": "2025-08-15T13:51:17.910837+00:00",
+    "ativo": true,
+    "cargo": "Designer Gráfico"
+  }
+]

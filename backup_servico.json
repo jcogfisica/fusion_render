@@ -1,1 +1,56 @@
-[{"model": "core.servico", "pk": 1, "fields": {"criado": "2025-08-15T13:48:02.322Z", "modificado": "2025-08-15T21:54:54.659Z", "ativo": true, "servico": "AutomaþÒo Industrial", "descricao": "O processo de automaþÒo industrial traz diversas vantagens competitivas para as empresas que o adotarem.", "icone": "lni-cog"}}, {"model": "core.servico", "pk": 2, "fields": {"criado": "2025-08-15T13:48:17.491Z", "modificado": "2025-08-15T13:48:17.491Z", "ativo": true, "servico": "Design", "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.", "icone": "lni-stats-up"}}, {"model": "core.servico", "pk": 3, "fields": {"criado": "2025-08-15T13:48:34.425Z", "modificado": "2025-08-15T13:48:34.425Z", "ativo": true, "servico": "Suporte Humanizado", "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.", "icone": "lni-users"}}, {"model": "core.servico", "pk": 4, "fields": {"criado": "2025-08-15T13:48:53.635Z", "modificado": "2025-08-15T21:55:11.999Z", "ativo": true, "servico": "Design Criativo UX/UI", "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.", "icone": "lni-layers"}}, {"model": "core.servico", "pk": 5, "fields": {"criado": "2025-08-15T13:49:11.153Z", "modificado": "2025-08-15T13:49:11.153Z", "ativo": true, "servico": "Desenvolvimento Mobile", "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.", "icone": "lni-mobile"}}, {"model": "core.servico", "pk": 6, "fields": {"criado": "2025-08-15T13:49:25.826Z", "modificado": "2025-08-15T13:49:25.826Z", "ativo": true, "servico": "Sistemas escalßveis", "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.", "icone": "lni-rocket"}}]
+[
+  {
+    "id": 2,
+    "criado": "2025-08-15T13:48:17.491764+00:00",
+    "modificado": "2025-08-15T13:48:17.491774+00:00",
+    "ativo": true,
+    "servico": "Design",
+    "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.",
+    "icone": "lni-stats-up"
+  },
+  {
+    "id": 3,
+    "criado": "2025-08-15T13:48:34.425953+00:00",
+    "modificado": "2025-08-15T13:48:34.425962+00:00",
+    "ativo": true,
+    "servico": "Suporte Humanizado",
+    "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.",
+    "icone": "lni-users"
+  },
+  {
+    "id": 5,
+    "criado": "2025-08-15T13:49:11.153272+00:00",
+    "modificado": "2025-08-15T13:49:11.153282+00:00",
+    "ativo": true,
+    "servico": "Desenvolvimento Mobile",
+    "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.",
+    "icone": "lni-mobile"
+  },
+  {
+    "id": 6,
+    "criado": "2025-08-15T13:49:25.826632+00:00",
+    "modificado": "2025-08-15T13:49:25.826641+00:00",
+    "ativo": true,
+    "servico": "Sistemas escaláveis",
+    "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.",
+    "icone": "lni-rocket"
+  },
+  {
+    "id": 1,
+    "criado": "2025-08-15T13:48:02.322782+00:00",
+    "modificado": "2025-08-15T21:54:54.659095+00:00",
+    "ativo": true,
+    "servico": "Automação Industrial",
+    "descricao": "O processo de automação industrial traz diversas vantagens competitivas para as empresas que o adotarem.",
+    "icone": "lni-cog"
+  },
+  {
+    "id": 4,
+    "criado": "2025-08-15T13:48:53.635035+00:00",
+    "modificado": "2025-08-15T21:55:11.999894+00:00",
+    "ativo": true,
+    "servico": "Design Criativo UX/UI",
+    "descricao": "Ut maximus enim dolor. Aenean auctor risus eget tincidunt lobortis. Donec tincidunt bibendum gravida.",
+    "icone": "lni-layers"
+  }
+]
