@@ -70,7 +70,6 @@ else:
             # Evita problemas de segurança ao enviar dados sensíveis
         )
     }
-
 # ---------------------------------------------------
 # Explicação detalhada de cada parâmetro:
 # ---------------------------------------------------
@@ -98,10 +97,9 @@ SECRET_KEY = 'django-insecure-9ws=#c@fv-y%#a3%b8ua422auu)#eq5$m%93tc0kv3d*ih8#vj
 # - Usada para sessões, CSRF e hashes internos
 # - Não deve ser versionada em produção
 
-ALLOWED_HOSTS = ['*'] # ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Inicializa a lista de domínios/hosts que o Django aceitará para requisições HTTP
 # Evita ataques do tipo "Host header injection" ao recusar requests vindos de domínios não autorizados
-"""
 if not DEBUG:
     # Executa este bloco somente em produção (DEBUG=False)
     external = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
@@ -116,7 +114,7 @@ if not DEBUG:
     ALLOWED_HOSTS.append('.onrender.com')
     # Adiciona um curinga para permitir qualquer subdomínio de onrender.com (*.onrender.com)
     # Útil se o app estiver disponível em múltiplos subdomínios gerenciados pelo Render
-"""
+
 # =============================================
 # INSTALLED_APPS
 # =============================================
@@ -145,17 +143,10 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 # =============================================
 MIDDLEWARE = [
-    "core.middleware.DebugIndexMiddleware",  # <-- adicionado
-
     'django.middleware.security.SecurityMiddleware',
     # Middleware de segurança do Django.
     # Adiciona headers HTTP de proteção, como HSTS, X-Content-Type-Options, X-XSS-Protection.
     # Ajuda a proteger a aplicação contra ataques comuns.
-
-    # 'whitenoise.middleware.WhiteNoiseMiddleware',
-    # Middleware do WhiteNoise.
-    # Serve arquivos estáticos diretamente pelo Django em produção sem depender de um servidor externo.
-    # Útil quando não há Nginx ou CDN configurados para servir static files.
 
     'django.contrib.sessions.middleware.SessionMiddleware',
     # Middleware de sessões do Django.
@@ -190,20 +181,6 @@ MIDDLEWARE = [
 # - SessionMiddleware antes de AuthMiddleware
 # - CSRF verifica POST/PUT/DELETE
 # - SecurityMiddleware adiciona headers de proteção
-
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",  # envia para stdout
-        },
-    },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",  # DEBUG se quiser logs mais detalhados
-    },
-}
 
 # =============================================
 # URLS E TEMPLATES
@@ -316,7 +293,6 @@ if not DEBUG:
         raise Exception(f"O arquivo {path_credenciais} não existe!")
         # Retorna uma exceção mostrando que path_credenciais não aponta para o arquivo JSON
 
-
 else:
     path_credenciais = os.path.join(BASE_DIR, filename)
     # Caminho para o arquivo de credenciais no ambiente local
@@ -389,7 +365,8 @@ if not DEBUG:
     # Cada um aponta para o mesmo bucket, mas em locais diferentes (location: "media" e location: "static"),
     # assim os arquivos ficam organizados separadamente dentro do bucket.
 
-    # Configuração para produção no GCS:
+    # ---------- CONFIGURAÇÃO PARA PRODUÇÃO NO GCS ---------- #
+
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
     # É uma configuração do Django que define qual backend de armazenamento será usado para arquivos de mídia
     # (ou seja, arquivos enviados por usuários, como fotos, documentos, etc).

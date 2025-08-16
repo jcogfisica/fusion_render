@@ -29,7 +29,7 @@ from .models import Servico, Equipe
 
 # Importa o formulário de contato definido em forms.py
 # - ContactForm contém campos do formulário (ex: nome, email, assunto, mensagem)
-# - Também deve ter um método send_email() para enviar emails ao administrador ou destinatário definido
+# - Também deve ter um metodo send_email() para enviar emails ao administrador ou destinatário definido
 from .forms import ContactForm
 
 # ======================================================================
@@ -66,7 +66,7 @@ class IndexView(FormView):
     # - reverse_lazy é usado aqui para evitar resolver a URL antes das rotas estarem carregadas.
 
     # ------------------------------------------------------------------
-    # Método para enviar dados extras para o template
+    # Metodo para enviar dados extras para o template
     # ------------------------------------------------------------------
     def get_context_data(self, **kwargs):
         """
@@ -74,7 +74,7 @@ class IndexView(FormView):
         - lista de serviços
         - lista de membros da equipe
         """
-        # Chama o método da classe pai para obter o contexto padrão
+        # Chama o metodo da classe pai para obter o contexto padrão
         # - Inclui automaticamente o objeto 'form' que será renderizado no template
         context = super().get_context_data(**kwargs)
 
@@ -92,7 +92,7 @@ class IndexView(FormView):
         return context
 
     # ------------------------------------------------------------------
-    # Método chamado quando formulário enviado é válido
+    # Metodo chamado quando formulário enviado é válido
     # ------------------------------------------------------------------
     def form_valid(self, form, *args, **kwargs):
         """
@@ -100,7 +100,7 @@ class IndexView(FormView):
         - Campos obrigatórios preenchidos
         - Dados com formato correto (ex: email válido)
         """
-        # Chama o método send_email do formulário
+        # Chama o metodo send_email do formulário
         # - Responsável por montar e enviar o email para o destinatário definido no formulário
         form.send_email()
 
@@ -114,7 +114,7 @@ class IndexView(FormView):
         return super().form_valid(form, *args, **kwargs)
 
     # ------------------------------------------------------------------
-    # Método chamado quando formulário enviado é inválido
+    # Metodo chamado quando formulário enviado é inválido
     # ------------------------------------------------------------------
     def form_invalid(self, form, *args, **kwargs):
         """
