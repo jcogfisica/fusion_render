@@ -23,5 +23,5 @@ urlpatterns = [
     #   → templates (ex: {% url 'index' %})
     #   → código Python (ex: reverse('index'))
     #   Isso facilita a manutenção, pois não precisamos alterar todas as referências caso a URL mude no futuro.
-    path('', IndexView.as_view(), name='index'),
+    path('', IndexView.as_view(), name = 'index'),
 ]

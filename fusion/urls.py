@@ -58,4 +58,6 @@ urlpatterns = [
 # static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT):
 #   - MEDIA_URL: prefixo usado para acessar arquivos de mídia via URL (ex: "/media/")
 #   - MEDIA_ROOT: caminho físico no servidor onde os arquivos enviados são salvos
-urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root = settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root = settings.STATIC_ROOT)

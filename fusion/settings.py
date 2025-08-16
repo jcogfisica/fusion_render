@@ -20,22 +20,65 @@ from google.oauth2 import service_account
 # Cria objetos de credenciais do Google Cloud a partir de arquivos JSON de Service Account
 # Necessário para autenticar uploads para GCS
 
-# Configuração do banco de dados principal da aplicação Django usando a biblioteca dj_database_url:
-DATABASES = {
-    'default': dj_database_url.config(
-        default='postgresql://jcog:MON010deo010@localhost:5432/fusion',
-        # Caso a variável de ambiente DATABASE_URL não esteja definida,
-        # usa a URL padrão do banco MySQL local especificada acima.
+RENDER = os.environ.get('RENDER') == 'TRUE'
+# Flag booleana para detectar se o app está rodando em Render.com
 
-        conn_max_age = 600,
-        # Tempo máximo (em segundos) que a conexão com o banco pode permanecer aberta e reutilizada.
-        # Usado para melhorar a performance evitando abrir uma conexão a cada requisição.
+DEBUG = not RENDER
+# DEBUG=True em dev: mostra erros detalhados, permite runserver servir arquivos estáticos
+# DEBUG=False em prod: oculta erros, obrigatório por segurança
 
-        ssl_require = False
-        # Define se a conexão com o banco de dados requer SSL.
-        # False significa que a conexão não usará criptografia SSL.
-    )
-}
+# ---------------------------------------------------
+# URL padrão do banco para desenvolvimento local
+# ---------------------------------------------------
+# Aqui estamos usando PostgreSQL local
+# Formato: postgresql://usuario:senha@host:porta/nome_do_banco
+LOCAL_DATABASE_URL = 'postgresql://jcog:MON010deo010@localhost:5432/fusion'
+
+# ---------------------------------------------------
+# Configuração do banco de dados
+# ---------------------------------------------------
+if DEBUG:
+    # -------------------------
+    # Desenvolvimento local
+    # -------------------------
+    DATABASES = {
+        'default': dj_database_url.config(
+            default=LOCAL_DATABASE_URL,
+            # Se não existir a variável de ambiente DATABASE_URL, usa LOCAL_DATABASE_URL
+            conn_max_age=600,
+            # Mantém a conexão aberta por 600 segundos (10 minutos)
+            # Evita overhead de criar uma conexão nova a cada requisição
+            ssl_require=False
+            # Não exige SSL em localhost
+            # SSL é desnecessário no ambiente local
+        )
+    }
+else:
+    # -------------------------
+    # Produção
+    # -------------------------
+    DATABASES = {
+        'default': dj_database_url.config(
+            # DATABASE_URL deve estar definida no ambiente de produção (Render, Heroku, etc.)
+            default=LOCAL_DATABASE_URL,
+            # Se DATABASE_URL não existir, ainda usamos a URL local como fallback
+            conn_max_age=600,
+            # Mantém conexões abertas por 10 minutos
+            ssl_require=True
+            # Exige SSL em produção
+            # Isso garante que a conexão com o banco remoto seja criptografada
+            # Evita problemas de segurança ao enviar dados sensíveis
+        )
+    }
+
+# ---------------------------------------------------
+# Explicação detalhada de cada parâmetro:
+# ---------------------------------------------------
+# default: URL de conexão do banco de dados, caso DATABASE_URL não exista
+# conn_max_age: tempo (em segundos) para reutilizar conexões abertas
+# ssl_require: se True, força conexão SSL; se False, permite conexão sem SSL
+# dj_database_url.config(): converte uma URL do banco em dicionário que Django entende
+# DATABASES['default']: dicionário principal de configuração do Django para o banco
 
 # =============================================
 # BASE_DIR
@@ -54,13 +97,6 @@ SECRET_KEY = 'django-insecure-9ws=#c@fv-y%#a3%b8ua422auu)#eq5$m%93tc0kv3d*ih8#vj
 # Chave secreta do Django
 # - Usada para sessões, CSRF e hashes internos
 # - Não deve ser versionada em produção
-
-RENDER = os.environ.get('RENDER') == 'TRUE'
-# Flag booleana para detectar se o app está rodando em Render.com
-
-DEBUG = not RENDER
-# DEBUG=True em dev: mostra erros detalhados, permite runserver servir arquivos estáticos
-# DEBUG=False em prod: oculta erros, obrigatório por segurança
 
 ALLOWED_HOSTS = ['*'] # ALLOWED_HOSTS = ['*', 'localhost', '127.0.0.1']
 # Inicializa a lista de domínios/hosts que o Django aceitará para requisições HTTP
@@ -114,7 +150,7 @@ MIDDLEWARE = [
     # Adiciona headers HTTP de proteção, como HSTS, X-Content-Type-Options, X-XSS-Protection.
     # Ajuda a proteger a aplicação contra ataques comuns.
 
-    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # 'whitenoise.middleware.WhiteNoiseMiddleware',
     # Middleware do WhiteNoise.
     # Serve arquivos estáticos diretamente pelo Django em produção sem depender de um servidor externo.
     # Útil quando não há Nginx ou CDN configurados para servir static files.

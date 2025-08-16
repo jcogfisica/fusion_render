@@ -33,8 +33,6 @@ from .models import Servico, Equipe
 # - A view usará esse formulário para exibir os campos e validar os dados enviados pelo usuário.
 from .forms import ContactForm
 
-
-
 # ======================================================================
 # DEFINIÇÃO DA VIEW PRINCIPAL
 # ======================================================================
@@ -60,7 +58,6 @@ class IndexView(FormView):
     # - `reverse_lazy('index')` gera a URL da rota chamada "index" (definida no arquivo urls.py).
     # - Assim, após o envio do formulário, o usuário volta para a página inicial.
     success_url = reverse_lazy('index')
-
 
     # ------------------------------------------------------------------
     # Enviando dados extras para o template
@@ -113,7 +110,6 @@ class IndexView(FormView):
         # Chamamos a versão original (`super`) de `form_valid`, para manter o comportamento padrão:
         # - Redirecionar o usuário para `success_url`.
         return super(IndexView, self).form_valid(form, *args, **kwargs)
-
 
     # ------------------------------------------------------------------
     # Tratamento de formulário inválido

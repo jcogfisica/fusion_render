@@ -9,7 +9,7 @@ from django.core.wsgi import get_wsgi_application
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'fusion.settings')
 # Define a variável de ambiente 'DJANGO_SETTINGS_MODULE' caso ainda não exista
 # Essa variável informa ao Django qual módulo de settings usar
-# No caso, 'Django2.settings' indica que o arquivo settings.py está no pacote Django2
+# No caso, 'fusion.settings' indica que o arquivo settings.py está no pacote fusion
 
 application = get_wsgi_application()
 # Cria a aplicação WSGI que será usada pelo servidor web (gunicorn, uwsgi, etc.)
