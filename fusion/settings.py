@@ -45,6 +45,40 @@ DEBUG = not RENDER
 # DEBUG=True em dev: mostra erros detalhados, permite runserver servir arquivos estáticos
 # DEBUG=False em prod: oculta erros, obrigatório por segurança
 
+if not DEBUG:
+    # Bloco executado quando estamos em produção (DEBUG=False)
+    DATABASES = {
+        'default': dj_database_url.config(
+            default='postgresql://jcog:MON010deo010@localhost:5432/fusion',
+            # URL fallback caso DATABASE_URL não esteja definida no ambiente
+            # Isso é útil para testes locais ou se a variável de ambiente não for fornecida
+            conn_max_age=600,
+            # Mantém conexões persistentes abertas por até 600 segundos
+            # Isso melhora performance evitando abrir/fechar conexão a cada requisição
+            ssl_require=False
+            # Indica se a conexão deve usar SSL. False geralmente em dev/local,
+            # True seria obrigatório em produção segura.
+        )
+    }
+else:
+    # Bloco executado quando estamos em desenvolvimento (DEBUG=True)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            # Driver nativo do Django para conectar com PostgreSQL
+            'NAME': 'fusion',
+            # Nome do banco de dados local
+            'USER': 'jcog',
+            # Usuário do banco local
+            'PASSWORD': 'MON010deo010',
+            # Senha do banco local
+            'HOST': 'localhost',
+            # Conexão local (mesma máquina)
+            'PORT': '5432',
+            # Porta padrão do PostgreSQL
+        }
+    }
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 # Lista de hosts/domínios permitidos para evitar ataques de Host header injection
 if not DEBUG:
@@ -175,65 +209,81 @@ USE_I18N = True
 USE_TZ = True
 # Armazena datetimes em UTC no banco e converte para timezone local ao exibir
 
-# =============================================
-# CREDENCIAIS GOOGLE CLOUD E BANCO DE DADOS
-# =============================================
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# Define o tipo padrão de campo para chaves primárias automáticas.
+
+# -------------------------------------------------------------------
+# Configuração para autenticação e acesso ao Google Cloud Storage (GCS)
+# -------------------------------------------------------------------
+
 path_credenciais = None
-# Variável que vai armazenar o caminho do arquivo JSON de credenciais
+# path_credenciais é o caminho para o arquivo de credenciais JSON, o qual contém as credenciais para acessar o bucket do Google Cloud
 
 filename = "credenciais.json"
-# Nome padrão do arquivo de credenciais
+# Nome do arquivo de credenciais
 
 GS_CREDENTIALS = None
-# Variável que vai guardar o objeto Credentials do Google Cloud
+# Objeto contendo as credenciais propriamente ditas
 
 if not DEBUG:
-    # Configurações de produção
-    DATABASES = {
-        'default': dj_database_url.config(
-            default='postgresql://jcog:MON010deo010@localhost:5432/fusion',
-            # URL fallback para dev/localhost
-            conn_max_age=600,  # tempo de reutilização de conexões
-            ssl_require=False  # SSL obrigatório em produção
-        )
-    }
+    # Se a aplicação estiver em produção
+
     path_credenciais = "/etc/secrets/" + filename
-    if os.path.exists(path_credenciais):
-        GS_CREDENTIALS = service_account.Credentials.from_service_account_file(path_credenciais)
-        # Cria objeto Credentials a partir do arquivo JSON
-    else:
-        raise Exception(f"O arquivo {path_credenciais} não existe!")
-else:
-    # Configurações de desenvolvimento
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',  # driver Postgres
-            'NAME': 'fusion',  # nome do banco local
-            'USER': 'jcog',  # usuário local
-            'PASSWORD': 'MON010deo010',  # senha local
-            'HOST': 'localhost',  # host local
-            'PORT': '5432',  # porta padrão Postgres
-        }
-    }
-    path_credenciais = os.path.join(BASE_DIR, filename)
-    # Procura arquivo de credenciais no diretório do projeto
-    if os.path.exists(path_credenciais):
-        GS_CREDENTIALS = service_account.Credentials.from_service_account_file(path_credenciais)
-    else:
-        raise Exception(f"O arquivo {path_credenciais} não existe!")
+    # Caminho para o arquivo de credenciais no ambiente do Render
 
-# =============================================
-# STORAGE E BUCKET GOOGLE CLOUD
-# =============================================
+    if os.path.exists(path_credenciais): # se o caminho path_credenciais aponta para o arquivo cujo nome é filename
+        # print(f"O arquivo {path_credenciais} existe!")
+
+        GS_CREDENTIALS = service_account.Credentials.from_service_account_file(path_credenciais)
+        # Carrega as credenciais do arquivo JSON utilizando a classe service_account.
+        # O metodo from_service_account_file lê o arquivo JSON e retorna um objeto credencial: GS_CREDENTIALS
+
+    else:
+        raise Exception(f"O arquivo {path_credenciais} não existe!")
+        # Retorna uma exceção mostrando que path_credenciais não aponta para o arquivo JSON
+
+
+else:
+    path_credenciais = os.path.join(BASE_DIR, filename)
+    # Caminho para o arquivo de credenciais no ambiente local
+
+    if os.path.exists(path_credenciais): # se o caminho path_credenciais aponta para o arquivo cujo nome é filename
+        # print(f"O arquivo {path_credenciais} existe!")
+
+        GS_CREDENTIALS = service_account.Credentials.from_service_account_file(path_credenciais)
+        # Carrega as credenciais do arquivo JSON utilizando a classe service_account.
+        # O metodo from_service_account_file lê o arquivo JSON e retorna um objeto credencial: GS_CREDENTIALS
+
+    else:
+        raise Exception(f"O arquivo {path_credenciais} não existe!")
+        # Retorna uma exceção mostrando que path_credenciais não aponta para o arquivo JSON
+
+# -------------------------------------------------------------------
+# Configurações do Google Cloud Storage para arquivos estáticos e mídia
+# -------------------------------------------------------------------
+
 GS_BUCKET_NAME = "django-render"
-# Nome do bucket no Google Cloud Storage
+# Nome do bucket no Google Cloud Storage onde os arquivos serão armazenados.
+
+# ---------- INÍCIO DA CONFIGURAÇÃO CONDICIONAL PARA AMBIENTES ----------
+
+# Abaixo implementamos uma diferenciação entre o ambiente de produção (quando DEBUG = False)
+# e o ambiente de desenvolvimento local (DEBUG = True), para que localmente os arquivos estáticos e de mídia
+# sejam armazenados e servidos pelo sistema de arquivos local, facilitando o desenvolvimento e testes.
+# Já em produção, os arquivos serão armazenados e servidos pelo bucket do Google Cloud Storage (GCS).
+#
+# Isso resolve o problema onde, localmente, a aplicação tentava enviar arquivos estáticos diretamente para o GCS,
+# o que pode não ser desejável ou configurado para funcionar no ambiente local.
+#
+# Essa abordagem permite que:
+# - No desenvolvimento local, arquivos estáticos e mídia sejam facilmente acessados e modificados localmente.
+# - Na produção, o uso do armazenamento em nuvem garante alta disponibilidade e escalabilidade.
 
 if not DEBUG:
-    # Produção: URLs públicas dos arquivos
     STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/static/"
     MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/media/"
+    # URLs públicas para acesso direto a arquivos estáticos e de mídia hospedados no bucket GCS.
 
-    # Configuração de storages remotos
     STORAGES = {
         "default": {
             "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
@@ -252,17 +302,79 @@ if not DEBUG:
             },
         },
     }
+    # Configuração que o Django usa para definir como e onde ele vai armazenar arquivos — principalmente arquivos estáticos (CSS, JS, imagens do layout)
+    # e arquivos de mídia (imagens, documentos enviados pelo usuário).
+    # Quando você usa armazenamento em nuvem — aqui, o Google Cloud Storage (GCS) — o Django precisa saber:
+    # 1) Qual é o backend de armazenamento (no caso, o storages.backends.gcloud.GoogleCloudStorage, que é a integração do Django com o Google Cloud Storage)
+    # 2) Em qual bucket os arquivos vão ser guardados (bucket_name)
+    # 3) Quais credenciais usar para autenticar e ter permissão de acessar esse bucket (credentials)
+    # 4) E uma "pasta" (localização) dentro do bucket para organizar os arquivos (location), por exemplo "media" para arquivos de mídia e "static" para arquivos estáticos
+    # O que significa cada chave?
+    # "default": define o armazenamento padrão para arquivos de mídia enviados pelo usuário (exemplo: fotos enviadas, PDFs etc)
+    # "staticfiles" — define o armazenamento para arquivos estáticos do seu site (exemplo: CSS, JavaScript, imagens do tema)
+    # Cada um aponta para o mesmo bucket, mas em locais diferentes (location: "media" e location: "static"),
+    # assim os arquivos ficam organizados separadamente dentro do bucket.
+
+    # Configuração para produção no GCS:
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    # É uma configuração do Django que define qual backend de armazenamento será usado para arquivos de mídia
+    # (ou seja, arquivos enviados por usuários, como fotos, documentos, etc).
+    # 'storages.backends.gcloud.GoogleCloudStorage' é o backend do pacote django-storages para armazenar arquivos no Google Cloud Storage (GCS).
+    # Quando o Django salva um arquivo de mídia (por exemplo, um upload de imagem),
+    # ele usará esse backend para enviar o arquivo para o bucket configurado no GCS, ao invés de salvar localmente no disco do servidor.
+
     STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
+    # Define qual backend será usado para armazenar e servir os arquivos estáticos (CSS, JavaScript, imagens fixas usadas pelo site).
+    # Também aponta para o backend do GCS. Isso indica que, quando você executar o comando collectstatic do Django,
+    # os arquivos estáticos serão enviados para o bucket no Google Cloud, ao invés de serem guardados localmente.
+
 else:
-    # Desenvolvimento local: diretórios físicos
-    STATIC_URL = '/static/'  # URL para arquivos estáticos locais
-    MEDIA_URL = '/media/'  # URL para uploads locais
+    STATIC_URL = '/static/'
+    # Define a URL base para acessar os arquivos estáticos localmente, ou seja, quando você estiver desenvolvendo ou rodando o projeto em modo debug (não em produção).
+
+    MEDIA_URL = '/media/'
+    # Define a URL base para acessar arquivos de mídia (uploads de usuários) localmente.
+
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    # Diretório físico para collectstatic
+    # Diretório local no servidor onde o comando collectstatic vai reunir todos os arquivos estáticos do projeto.
+    # Em ambiente local, o Django coleta todos os arquivos estáticos (de apps e pastas STATICFILES_DIRS) e os coloca nessa pasta para serem servidos pelo servidor local.
+
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    # Diretório físico para uploads
+    # Diretório local onde o Django salva os arquivos de mídia (uploads de usuários) quando você está rodando o projeto localmente.
+    # Para desenvolvimento local, onde normalmente não se usa armazenamento em nuvem, mas salva arquivos no disco do próprio computador.
+
+    # Pode adicionar diretórios extras para arquivos estáticos, caso use:
+    # STATICFILES_DIRS = [
+        #BASE_DIR / 'core' / 'static',
+    #]
+
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    # Salva uploads em MEDIA_ROOT
+    # Define o backend de armazenamento para arquivos de mídia (uploads feitos por usuários) usando o sistema de arquivos local.
+    # Ao invés de enviar para o Google Cloud Storage, o Django vai salvar os arquivos no diretório local definido por MEDIA_ROOT.
+    # Esse é o comportamento padrão do Django quando você não configura nada relacionado a armazenamento em nuvem.
+
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-    # Coleta arquivos estáticos para STATIC_ROOT
+    # Backend padrão para lidar com arquivos estáticos (CSS, JS, imagens do site).
+    # Ao rodar python manage.py collectstatic, todos os arquivos estáticos serão reunidos no diretório local STATIC_ROOT.    #
+    # Eles não serão enviados para um bucket em nuvem.
+    # Esse backend apenas cuida de copiar e organizar os arquivos localmente para que o servidor de desenvolvimento ou um servidor web (como Nginx) possa servi-los.
+
+    # ---------- FIM DA CONFIGURAÇÃO CONDICIONAL PARA AMBIENTES ----------
+
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    LOGOUT_REDIRECT_URL = 'index'
+
+    # Comentários adicionais:
+    # Ao executar o comando 'python manage.py collectstatic', o Django irá coletar
+    # os arquivos estáticos de todos os apps instalados e também de STATICFILES_DIRS
+    # e armazená-los em STATIC_ROOT para posteriormente fazer upload no bucket.
+
+    """
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_PASSWORD = '<PASSWORD>'
+    EMAIL_HOST_USER = 'no-reply@seudominio.com'
+    """
+    # Configurações de email, atualmente comentadas.
+    # Servem para enviar emails via servidor SMTP, como confirmação de cadastro, reset de senha, etc.
