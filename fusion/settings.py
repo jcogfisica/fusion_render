@@ -145,6 +145,8 @@ INSTALLED_APPS = [
 # MIDDLEWARE
 # =============================================
 MIDDLEWARE = [
+    "core.middleware.RequestLoggerMiddleware",  # <-- adicionado
+
     'django.middleware.security.SecurityMiddleware',
     # Middleware de segurança do Django.
     # Adiciona headers HTTP de proteção, como HSTS, X-Content-Type-Options, X-XSS-Protection.
@@ -163,8 +165,6 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     # Middleware com funcionalidades comuns de utilidade.
     # Inclui suporte a APPEND_SLASH, redirecionamentos automáticos e tratamento de ETags.
-
-    "core.middleware.DebugTemplateContextMiddleware",  # <- middleware de debug
 
     'django.middleware.csrf.CsrfViewMiddleware',
     # Middleware de proteção CSRF (Cross-Site Request Forgery).
@@ -185,12 +185,25 @@ MIDDLEWARE = [
     # Adiciona o header X-Frame-Options para evitar que páginas do site sejam exibidas dentro de iframes de terceiros.
     # Normalmente configurado como SAMEORIGIN.
 ]
-
 # Middleware processa cada request/response
 # Ordem importante:
 # - SessionMiddleware antes de AuthMiddleware
 # - CSRF verifica POST/PUT/DELETE
 # - SecurityMiddleware adiciona headers de proteção
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",  # envia para stdout
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",  # DEBUG se quiser logs mais detalhados
+    },
+}
 
 # =============================================
 # URLS E TEMPLATES
