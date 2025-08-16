@@ -412,7 +412,9 @@ else:
 
     # ---------- FIM DA CONFIGURAÇÃO CONDICIONAL PARA AMBIENTES ----------
 
-    # EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    if DEBUG:
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
     LOGOUT_REDIRECT_URL = 'index'
 
     # Comentários adicionais:
