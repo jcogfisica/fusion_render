@@ -20,6 +20,23 @@ from google.oauth2 import service_account
 # Cria objetos de credenciais do Google Cloud a partir de arquivos JSON de Service Account
 # Necessário para autenticar uploads para GCS
 
+# Configuração do banco de dados principal da aplicação Django usando a biblioteca dj_database_url:
+DATABASES = {
+    'default': dj_database_url.config(
+        default='postgresql://jcog:MON010deo010@localhost:5432/fusion',
+        # Caso a variável de ambiente DATABASE_URL não esteja definida,
+        # usa a URL padrão do banco MySQL local especificada acima.
+
+        conn_max_age = 600,
+        # Tempo máximo (em segundos) que a conexão com o banco pode permanecer aberta e reutilizada.
+        # Usado para melhorar a performance evitando abrir uma conexão a cada requisição.
+
+        ssl_require = False
+        # Define se a conexão com o banco de dados requer SSL.
+        # False significa que a conexão não usará criptografia SSL.
+    )
+}
+
 # =============================================
 # BASE_DIR
 # =============================================
@@ -45,49 +62,24 @@ DEBUG = not RENDER
 # DEBUG=True em dev: mostra erros detalhados, permite runserver servir arquivos estáticos
 # DEBUG=False em prod: oculta erros, obrigatório por segurança
 
-if not DEBUG:
-    # Bloco executado quando estamos em produção (DEBUG=False)
-    DATABASES = {
-        'default': dj_database_url.config(
-            default='postgresql://jcog:MON010deo010@localhost:5432/fusion',
-            # URL fallback caso DATABASE_URL não esteja definida no ambiente
-            # Isso é útil para testes locais ou se a variável de ambiente não for fornecida
-            conn_max_age=600,
-            # Mantém conexões persistentes abertas por até 600 segundos
-            # Isso melhora performance evitando abrir/fechar conexão a cada requisição
-            ssl_require=False
-            # Indica se a conexão deve usar SSL. False geralmente em dev/local,
-            # True seria obrigatório em produção segura.
-        )
-    }
-else:
-    # Bloco executado quando estamos em desenvolvimento (DEBUG=True)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            # Driver nativo do Django para conectar com PostgreSQL
-            'NAME': 'fusion',
-            # Nome do banco de dados local
-            'USER': 'jcog',
-            # Usuário do banco local
-            'PASSWORD': 'MON010deo010',
-            # Senha do banco local
-            'HOST': 'localhost',
-            # Conexão local (mesma máquina)
-            'PORT': '5432',
-            # Porta padrão do PostgreSQL
-        }
-    }
-
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-# Lista de hosts/domínios permitidos para evitar ataques de Host header injection
+# Inicializa a lista de domínios/hosts que o Django aceitará para requisições HTTP
+# Evita ataques do tipo "Host header injection" ao recusar requests vindos de domínios não autorizados
+
 if not DEBUG:
-    # Em produção, adiciona host público fornecido pelo Render
+    # Executa este bloco somente em produção (DEBUG=False)
     external = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+    # Obtém o hostname público fornecido automaticamente pelo Render.com para este serviço
+    # Ex.: 'meu-app-xyz.onrender.com'
+
     if external:
         ALLOWED_HOSTS.append(external)
+        # Adiciona o hostname público à lista de hosts permitidos
+        # Isso garante que o site acessível pela internet seja reconhecido pelo Django
+
     ALLOWED_HOSTS.append('.onrender.com')
-# Adiciona curinga para permitir subdomínios *.onrender.com
+    # Adiciona um curinga para permitir qualquer subdomínio de onrender.com (*.onrender.com)
+    # Útil se o app estiver disponível em múltiplos subdomínios gerenciados pelo Render
 
 # =============================================
 # INSTALLED_APPS
@@ -118,13 +110,44 @@ INSTALLED_APPS = [
 # =============================================
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # Middleware de segurança do Django.
+    # Adiciona headers HTTP de proteção, como HSTS, X-Content-Type-Options, X-XSS-Protection.
+    # Ajuda a proteger a aplicação contra ataques comuns.
+
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    # Middleware do WhiteNoise.
+    # Serve arquivos estáticos diretamente pelo Django em produção sem depender de um servidor externo.
+    # Útil quando não há Nginx ou CDN configurados para servir static files.
+
     'django.contrib.sessions.middleware.SessionMiddleware',
+    # Middleware de sessões do Django.
+    # Habilita o uso de request.session para armazenar dados temporários do usuário.
+    # Deve vir antes do AuthenticationMiddleware, pois ele depende das sessões.
+
     'django.middleware.common.CommonMiddleware',
+    # Middleware com funcionalidades comuns de utilidade.
+    # Inclui suporte a APPEND_SLASH, redirecionamentos automáticos e tratamento de ETags.
+
     'django.middleware.csrf.CsrfViewMiddleware',
+    # Middleware de proteção CSRF (Cross-Site Request Forgery).
+    # Garante que requisições POST, PUT e DELETE venham de fontes confiáveis.
+    # Adiciona e valida o token CSRF automaticamente.
+
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # Middleware de autenticação.
+    # Adiciona request.user, permitindo identificar o usuário logado em cada requisição.
+    # Depende de SessionMiddleware para funcionar corretamente.
+
     'django.contrib.messages.middleware.MessageMiddleware',
+    # Middleware de mensagens "flash".
+    # Permite enviar mensagens temporárias entre requests, integrando com templates e exibição de alertas.
+
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Middleware anti-clickjacking.
+    # Adiciona o header X-Frame-Options para evitar que páginas do site sejam exibidas dentro de iframes de terceiros.
+    # Normalmente configurado como SAMEORIGIN.
 ]
+
 # Middleware processa cada request/response
 # Ordem importante:
 # - SessionMiddleware antes de AuthMiddleware
