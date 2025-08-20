@@ -18,4 +18,4 @@ htmlcov/*
 
 recycle/*
 
-tests/*
+core/tests/*
