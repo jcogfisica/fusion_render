@@ -1,90 +1,113 @@
 from django import forms
-# Importa o módulo `forms` do Django, que fornece classes e ferramentas
-# para criar formulários HTML de maneira simples e integrada com o framework.
-# Isso nos permite validar dados e estruturar entradas de usuários de forma consistente.
+# Importa o módulo `forms` do Django.
+# Este módulo fornece classes e ferramentas para criar formulários HTML de maneira declarativa.
+# Um formulário no Django não é apenas HTML estático: ele também inclui validação de dados,
+# conversão de tipos, integração com modelos e geração automática de widgets (inputs, selects, etc.).
+# Aqui estamos importando o pacote inteiro, pois vamos herdar da classe `forms.Form`.
 
 from django.core.mail.message import EmailMessage
-# Importa a classe `EmailMessage`, responsável por criar e enviar mensagens de e-mail.
-# Com ela, conseguimos definir remetente, destinatários, assunto, corpo do e-mail
-# e até cabeçalhos personalizados.
+# Importa a classe `EmailMessage` do submódulo `django.core.mail.message`.
+# Essa classe representa um objeto de e-mail completo no Django.
+# Com ela podemos configurar assunto, corpo, remetente, destinatários e cabeçalhos,
+# e depois enviá-lo através do backend de e-mail definido no `settings.py` (SMTP, console, file, etc.).
 
 # ==============================
 # DEFINIÇÃO DO FORMULÁRIO
 # ==============================
 class ContactForm(forms.Form):
-    # Define um formulário chamado `ContactForm` que herda de `forms.Form`.
-    # Isso significa que estamos criando um formulário manualmente, sem vínculo
-    # direto com modelos do banco de dados (ModelForm seria esse caso).
-    # Ele será usado para coletar informações enviadas pelo usuário em uma página de contato.
+    # Define a classe `ContactForm`, que herda de `forms.Form`.
+    # `forms.Form` é uma classe base para criação de formulários que não estão diretamente
+    # ligados a modelos do banco de dados (diferente de `forms.ModelForm`, que é integrado ao ORM).
+    # Esta classe representa a estrutura e a lógica de validação de um formulário de contato,
+    # normalmente usado em páginas "Fale Conosco".
 
     nome = forms.CharField(label="Nome", max_length=100)
-    # Campo de texto simples (`CharField`) para armazenar o nome do usuário.
-    # `label="Nome"` define o rótulo exibido no formulário.
-    # `max_length=100` limita o tamanho da string para evitar dados muito grandes.
+    # Define um campo de formulário chamado `nome`.
+    # `forms.CharField` cria um campo de texto simples (input type="text").
+    # O parâmetro `label` define o texto que aparecerá como rótulo no formulário renderizado.
+    # O `max_length=100` define a restrição de tamanho máximo para o valor desse campo,
+    # e também influencia a validação: se o usuário digitar mais que 100 caracteres, o formulário será inválido.
 
     email = forms.EmailField(label="E-mail", max_length=100)
-    # Campo de e-mail (`EmailField`) que automaticamente valida se o valor
-    # fornecido segue o formato de um endereço de e-mail.
-    # `max_length=100` impede textos muito longos.
+    # Define um campo de formulário chamado `email`.
+    # `forms.EmailField` é uma subclasse de `CharField` que adiciona validação extra:
+    # verifica se o valor informado segue o formato padrão de endereço de e-mail.
+    # Assim, o Django garante que o valor armazenado seja um e-mail válido.
+    # O `max_length=100` limita o tamanho do valor, assim como no campo `nome`.
 
     assunto = forms.CharField(label="Assunto", max_length=200)
-    # Campo de texto (`CharField`) que representa o assunto da mensagem.
-    # `max_length=200` define o tamanho máximo permitido.
+    # Define um campo chamado `assunto`.
+    # Também é um `CharField`, mas aqui permitimos até 200 caracteres.
+    # Representa o assunto do e-mail que será enviado.
+    # Esse campo não tem validações específicas além do tamanho máximo.
 
     mensagem = forms.CharField(label="Mensagem", widget=forms.Textarea)
-    # Campo de texto (`CharField`) que utiliza um widget especial: `Textarea`.
-    # Diferente de um campo de entrada de linha única, `Textarea` gera
-    # uma caixa de múltiplas linhas para que o usuário escreva sua mensagem.
-    # Ideal para textos longos.
+    # Define um campo chamado `mensagem`.
+    # É um `CharField`, mas aqui passamos um parâmetro especial: `widget=forms.Textarea`.
+    # Widgets controlam como o campo será renderizado em HTML. O `Textarea` gera um
+    # elemento `<textarea>` (múltiplas linhas de texto), adequado para mensagens longas.
+    # O `label="Mensagem"` será exibido junto ao campo no HTML.
 
     # ==============================
     # METODO PERSONALIZADO PARA ENVIO DE E-MAIL
     # ==============================
     def send_email(self):
-        # Define um metodo da classe `ContactForm` para enviar um e-mail
-        # com os dados preenchidos no formulário. Só deve ser chamado após
-        # validar o formulário com `is_valid()`.
+        # Define um metodo de instância chamado `send_email`, pertencente ao formulário `ContactForm`.
+        # Este metodo encapsula a lógica para enviar os dados preenchidos via e-mail.
+        # Importante: esse metodo só deve ser chamado após validar o formulário com `is_valid()`.
+        # Isso porque ele depende de `self.cleaned_data`, que só existe se o formulário for válido.
 
         nome = self.cleaned_data['nome']
-        # Recupera o valor do campo `nome` já validado pelo formulário.
-        # `cleaned_data` é um dicionário que só existe após a validação.
+        # Acessa o valor do campo `nome` a partir do dicionário `cleaned_data`.
+        # `cleaned_data` é criado internamente pelo Django quando `form.is_valid()` é chamado.
+        # Ele contém os dados já convertidos e validados.
+        # Aqui, `nome` já é garantidamente uma string com até 100 caracteres.
 
         email = self.cleaned_data['email']
-        # Recupera o valor do campo `email` validado.
-        # Garantido que é um e-mail válido (graças ao `EmailField`).
+        # Acessa o valor validado do campo `email`.
+        # Neste ponto, já foi verificado se é um e-mail válido.
+        # O valor armazenado é uma string no formato de endereço eletrônico.
 
         assunto = self.cleaned_data['assunto']
-        # Recupera o assunto informado pelo usuário.
+        # Acessa o valor do campo `assunto` validado.
+        # Representa a linha de assunto do e-mail que será enviado.
 
         mensagem = self.cleaned_data['mensagem']
-        # Recupera a mensagem de texto enviada.
+        # Acessa o valor do campo `mensagem` validado.
+        # Será usado como corpo do e-mail, junto com os outros dados.
 
         conteudo = f"Nome: {nome}\nE-mail: {email}\nAssunto: {assunto}\nMensagem: {mensagem}"
-        # Monta o corpo do e-mail que será enviado.
-        # Aqui usamos uma f-string para formatar e incluir todos os dados
-        # do formulário em um texto organizado.
+        # Cria uma string formatada (f-string) contendo todos os dados do formulário.
+        # Essa string será o corpo principal do e-mail.
+        # Inclui quebras de linha `\n` para organizar as informações em linhas separadas.
 
         mail = EmailMessage(
             subject=assunto,
-            # Define o assunto do e-mail como sendo o mesmo preenchido pelo usuário.
+            # Define o campo "assunto" do e-mail como o mesmo informado pelo usuário.
 
             body=conteudo,
-            # Define o corpo da mensagem como o texto montado acima.
+            # Define o corpo (texto) do e-mail como a string criada acima.
+            # O parâmetro `body` pode ser texto simples ou HTML, mas aqui usamos texto simples.
 
             from_email="contato@fusion.com.br",
-            # Define o remetente do e-mail. Deve ser um e-mail configurado
-            # no servidor SMTP do projeto.
+            # Define o remetente do e-mail (campo "From:").
+            # Este endereço deve ser configurado no backend de e-mail do Django (ex.: SMTP).
+            # Se não for válido ou não estiver autorizado no servidor, o envio pode falhar.
 
             to=["contato@fusion.com.br"],
-            # Lista de destinatários do e-mail. Pode conter um ou mais endereços.
-            # Aqui, estamos enviando para o mesmo e-mail de contato.
+            # Define a lista de destinatários do e-mail (campo "To:").
+            # Aqui passamos uma lista contendo apenas um endereço, mas poderia haver vários.
 
             headers={"Reply-To": "contato@fusion.com.br"}
-            # Define cabeçalhos adicionais. `Reply-To` indica para onde
-            # as respostas devem ser direcionadas, útil quando queremos
-            # centralizar todas as respostas em um endereço específico.
+            # Define cabeçalhos extras do e-mail.
+            # O `Reply-To` indica o endereço para onde as respostas devem ser enviadas.
+            # É útil para diferenciar o endereço do remetente e o endereço que recebe respostas.
         )
+        # A variável `mail` agora contém um objeto `EmailMessage` pronto para ser enviado.
 
         mail.send()
-        # Envia o e-mail de fato. Esse metodo faz a integração com o backend de envio
-        # configurado no settings.py (como SMTP, console backend etc.).
+        # Chama o metodo `send()` do objeto `EmailMessage`.
+        # Este metodo interage com o backend de envio de e-mail configurado no Django (`EMAIL_BACKEND`).
+        # Pode ser SMTP (para envio real), console (apenas exibe no terminal) ou file (salva em arquivos).
+        # Se for SMTP, aqui é estabelecida a conexão com o servidor, e a mensagem é transmitida.
+

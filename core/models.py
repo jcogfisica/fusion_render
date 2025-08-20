@@ -1,91 +1,157 @@
 # ======================================================================
-# MODELS COMENTADOS LINHA A LINHA (SUPER DIDÁTICOS)
+# MODELS COMENTADOS LINHA A LINHA (EXPLICAÇÃO EXTREMAMENTE DETALHADA)
 # ======================================================================
 
-# Importações de módulos padrão do Python
-import os       # O módulo 'os' fornece funções para manipular caminhos de arquivos,
-                # variáveis de ambiente, diretórios e arquivos locais.
-import uuid     # O módulo 'uuid' gera identificadores únicos universais (UUID),
-                # usados aqui para nomear arquivos de forma única e evitar conflitos.
+# ----------------------------------------------------------------------
+# Importações de bibliotecas padrão do Python
+# ----------------------------------------------------------------------
+import os
+# 'os' é um módulo da biblioteca padrão do Python.
+# Ele oferece funções para manipular o sistema operacional.
+# Exemplos: criar/remover diretórios, trabalhar com caminhos de arquivos,
+# acessar variáveis de ambiente, juntar paths de forma segura.
+# Aqui, pode ser útil caso precisemos manipular nomes e diretórios de arquivos.
 
-# Importações do Django
-from django.db import models           # Necessário para criar modelos (classes que representam tabelas no banco)
-from django.conf import settings       # Permite acessar variáveis definidas em settings.py, como MEDIA_URL
-from pictures.models import PictureField  # Campo avançado para imagens, suporta breakpoints, placeholders e formatos de arquivo.
+import uuid
+# 'uuid' é outro módulo padrão do Python.
+# Ele gera "Universally Unique Identifiers" (UUIDs).
+# UUIDs são números grandes usados para identificar coisas de forma única
+# em diferentes sistemas sem risco de colisão.
+# Exemplo: '550e8400-e29b-41d4-a716-446655440000'.
+# Aqui é usado para gerar nomes de arquivos únicos (evitando conflitos).
+
+# ----------------------------------------------------------------------
+# Importações específicas do Django
+# ----------------------------------------------------------------------
+from django.db import models
+# 'django.db' é o módulo de banco de dados do Django.
+# 'models' fornece classes e tipos de campos para criar modelos.
+# Um "modelo" é uma classe Python que representa uma tabela no banco de dados.
+# Cada atributo da classe equivale a uma coluna da tabela.
+
+from django.conf import settings
+# 'settings' permite acessar as configurações globais do projeto (settings.py).
+# Exemplo: podemos pegar MEDIA_URL, MEDIA_ROOT, AUTH_USER_MODEL, etc.
+
+from pictures.models import PictureField
+# 'PictureField' é um campo customizado de outro app (pictures).
+# Ele funciona como uma extensão do 'ImageField' do Django.
+# Adiciona suporte a:
+#   - diferentes proporções de imagem (aspect_ratios),
+#   - múltiplas resoluções (breakpoints),
+#   - formatos de arquivo específicos,
+#   - metadados de largura/altura.
+# Isso facilita trabalhar com imagens em aplicações responsivas.
 
 # ----------------------------------------------------------------------
 # Função auxiliar para gerar nomes de arquivos únicos
 # ----------------------------------------------------------------------
 def get_file_path(_instance, filename):
     """
-    Recebe a instância do modelo e o nome original do arquivo.
-    Retorna um novo nome único baseado em UUID.
-    Isso evita conflitos de nome quando vários arquivos têm o mesmo nome.
+    Essa função é chamada sempre que um arquivo (ex: imagem) é salvo.
+    Ela recebe:
+      - _instance: o objeto do modelo que contém o campo de arquivo.
+      - filename: o nome original do arquivo enviado pelo usuário.
+    Retorna:
+      - Um nome de arquivo único baseado em UUID.
+    Isso evita que arquivos com o mesmo nome sobrescrevam uns aos outros.
     """
-    ext = filename.split('.')[-1]          # Pega a extensão do arquivo (parte após o último ponto)
-    filename = f'{uuid.uuid4()}.{ext}'     # Cria um novo nome usando UUID + extensão original
-    return filename                         # Retorna o nome final que será usado para salvar o arquivo
+
+    ext = filename.split('.')[-1]
+    # 'filename.split('.')' divide o nome do arquivo em partes separadas por ponto.
+    # Exemplo: 'foto.png' → ['foto', 'png'].
+    # '[-1]' pega a última parte da lista, que é a extensão ('png').
+    # Assim, preservamos o formato original.
+
+    filename = f'{uuid.uuid4()}.{ext}'
+    # 'uuid.uuid4()' gera um UUID aleatório.
+    # Exemplo: '4f5d3c8a-2e12-4c6a-88b9-3d3bcd899cab'.
+    # Depois concatenamos a extensão para manter o formato.
+    # Exemplo: '4f5d3c8a-2e12-4c6a-88b9-3d3bcd899cab.png'.
+
+    return filename
+    # Retorna o novo nome do arquivo, que será usado pelo campo de imagem.
 
 # ======================================================================
-# Classe Base (abstrata) para outros modelos
+# CLASSE BASE (Modelo abstrato para herança)
 # ======================================================================
 class Base(models.Model):
     """
-    Modelo base que adiciona campos comuns a todos os modelos que herdam dele:
-    - criado: registra a data de criação
-    - modificado: registra a última modificação
-    - ativo: flag para exclusão lógica (não apaga do banco)
+    Esta é uma classe abstrata, usada como "modelo base".
+    - 'models.Model' é a superclasse que conecta o modelo ao ORM do Django.
+    - Não cria tabela no banco (por causa do 'abstract = True' no Meta).
+    - Serve para evitar repetição de código em outros modelos.
+    Contém:
+    - criado: Data de criação.
+    - modificado: Data da última modificação.
+    - ativo: Indica se o registro está ativo ou não.
     """
+
     criado = models.DateTimeField(
-        'Data de criação',  # Nome amigável no admin
-        auto_now_add=True   # Define automaticamente a data ao criar o objeto
+        'Data de criação',
+        auto_now_add=True
     )
+    # 'DateTimeField' cria uma coluna de data e hora.
+    # 'auto_now_add=True' → preenche automaticamente com a data atual
+    # no momento em que o objeto é criado (primeiro save()).
 
     modificado = models.DateTimeField(
-        'Data de modificação',  # Nome amigável no admin
-        auto_now=True           # Atualiza automaticamente a data sempre que o objeto é salvo
+        'Data de modificação',
+        auto_now=True
     )
+    # 'auto_now=True' → atualiza o campo para a data/hora atual
+    # sempre que o objeto for salvo (update).
 
     ativo = models.BooleanField(
-        'Ativo?',  # Nome amigável no admin
-        default=True  # Todos os objetos criados são ativos por padrão
+        'Ativo?',
+        default=True
     )
+    # 'BooleanField' cria um campo booleano (True/False).
+    # 'default=True' significa que, por padrão, a totalidade dos objetos é ativa.
 
     class Meta:
-        abstract = True  # Não cria tabela no banco, só serve de base para outros modelos
+        abstract = True
+        # 'abstract = True' indica que essa classe não será transformada
+        # em uma tabela no banco.
+        # Apenas outras classes que herdarem dela criarão tabelas.
 
 # ======================================================================
-# Modelo Cargo
+# MODELO CARGO
 # ======================================================================
 class Cargo(Base):
     """
-    Representa um cargo dentro da equipe (ex: Designer, Desenvolvedor)
-    Herdando Base, já possui campos criado, modificado e ativo.
+    Representa um cargo na equipe (exemplo: Designer, Desenvolvedor).
+    Herda de Base → já possui criado, modificado e ativo.
     """
+
     cargo = models.CharField(
-        'Cargo',       # Nome amigável no admin
-        max_length=100 # Limite máximo de caracteres (obrigatório para CharField)
+        'Cargo',
+        max_length=100
     )
+    # 'CharField' → campo de texto de tamanho limitado.
+    # 'max_length=100' → aceita até 100 caracteres.
+    # 'verbose_name="Cargo"' → nome legível exibido no admin.
 
     class Meta:
         verbose_name = 'Cargo'
         verbose_name_plural = 'Cargos'
+        # Configura nomes amigáveis para exibição no Django Admin.
 
     def __str__(self):
-        """
-        Retorna o nome do cargo ao converter o objeto em string (ex: no admin)
-        """
         return self.cargo
+        # '__str__' define a representação em string do objeto.
+        # Isso é usado no Django Admin, QuerySets, etc.
+        # Aqui retorna o nome do cargo (ex: "Designer").
 
 # ======================================================================
-# Modelo Servico
+# MODELO SERVIÇO
 # ======================================================================
 class Servico(Base):
     """
-    Representa um serviço oferecido.
-    Herdando Base, já possui campos criado, modificado e ativo.
+    Representa um serviço oferecido (ex: Desenvolvimento Web).
     """
-    # Opções possíveis para o campo 'icone' (para exibição visual)
+
+    # Lista de opções pré-definidas para o campo 'icone'.
     choices = (
         ("lni-cog", "Engrenagem"),
         ("lni-stats-up", "Gráfico"),
@@ -96,129 +162,114 @@ class Servico(Base):
     )
 
     servico = models.CharField(
-        'Serviço',    # Nome legível no admin
-        max_length=100  # Limite de caracteres
+        'Serviço',
+        max_length=100
     )
 
     descricao = models.TextField(
-        'Descrição',  # Nome legível no admin
-        blank=True,   # Permite campo vazio
-        max_length=200 # Limite usado para validação, mesmo sendo TextField
+        'Descrição',
+        # blank=True,
+        max_length=200
     )
+    # 'TextField' é usado para textos longos.
+    # 'blank=True' → o campo pode ficar vazio.
+    # 'max_length=200' → não é restritivo no banco, mas pode ser usado
+    # como validação em formulários/admin.
 
     icone = models.CharField(
-        'Ícone',       # Nome legível no admin
-        max_length=12, # Tamanho máximo do código do ícone
-        choices=choices # Restringe os valores possíveis aos definidos em 'choices'
+        'Ícone',
+        max_length=12,
+        choices=choices
     )
+    # 'choices' restringe os valores permitidos a um conjunto fixo.
+    # No admin, será exibido um dropdown com as opções definidas.
 
     class Meta:
         verbose_name = 'Serviço'
         verbose_name_plural = 'Serviços'
 
     def __str__(self):
-        """
-        Retorna o nome do serviço quando o objeto é convertido em string (ex: admin)
-        """
         return self.servico
 
 # ======================================================================
-# Modelo Equipe
+# MODELO EQUIPE
 # ======================================================================
 class Equipe(Base):
     """
-    Representa um membro da equipe.
-    Herdando Base, já possui criado, modificado e ativo.
+    Representa um membro da equipe (pessoa).
     """
+
     nome = models.CharField(
-        'Nome',       # Nome legível no admin
-        max_length=100 # Limite de caracteres
+        'Nome',
+        max_length=100
     )
 
     cargo = models.ForeignKey(
-        'core.Cargo',        # Relaciona o membro a um cargo específico
-        verbose_name='Cargo',# Nome amigável no admin
-        on_delete=models.CASCADE  # Se o cargo for deletado, todos os membros relacionados também serão deletados
+        'core.Cargo',
+        verbose_name='Cargo',
+        on_delete=models.CASCADE
     )
+    # 'ForeignKey' cria um relacionamento N:1 (muitos para um).
+    # Cada membro da equipe tem 1 cargo.
+    # 'on_delete=models.CASCADE' → se o cargo for deletado, os membros relacionados também são deletados.
 
     bio = models.TextField(
-        'Bio',      # Nome amigável no admin
-        blank=True, # Permite campo vazio
-        max_length=200 # Limite recomendado (TextField não exige)
+        'Bio',
+        # blank=True,
+        max_length=200
     )
 
     imagem = PictureField(
-        upload_to=get_file_path,    # Função que define o caminho e o nome do arquivo ao salvar.
-                                     # Aqui usamos a função get_file_path, que cria um nome único com UUID
-                                     # Isso evita conflitos de nomes iguais no bucket ou no disco local.
-
-        width_field="image_width",  # Nome do campo que armazenará a largura real da imagem original.
-                                     # Quando uma imagem é salva, o Django automaticamente grava a largura nesse campo.
-                                     # Útil para exibir imagens com dimensões corretas no template.
-
-        height_field="image_height",# Nome do campo que armazenará a altura real da imagem original.
-                                     # Funciona igual ao width_field, mas para altura.
-
-        aspect_ratios=[None, "1/1"], # Lista de proporções permitidas para o corte da imagem.
-                                      # None → permite qualquer proporção (liberdade total)
-                                      # "1/1" → permite corte quadrado (mesma largura e altura)
-                                      # O usuário ou o sistema pode cortar ou redimensionar a imagem baseado nessas proporções.
-
-        breakpoints={},              # Dicionário para definir larguras de imagens responsivas.
-                                      # Cada breakpoint define uma versão redimensionada da imagem.
-                                      # Vazio {} → sem redimensionamento automático.
-                                      # Se fosse {"thumb": 480, "desktop": 992}, seriam criadas versões 480px e 992px.
-
-        file_types=["PNG"],          # Lista de formatos de arquivo permitidos.
-                                      # Aqui apenas PNG é aceito.
-                                      # Evita que usuários enviem JPG, GIF ou WEBP, por exemplo.
-
-        grid_columns=1,              # Configuração visual para exibição da imagem em grids responsivos.
-                                      # Indica quantas colunas da grid a imagem ocupa.
-                                      # Usado internamente pelo sistema de PictureField para layout de frontend.
-
-        container_width=480,         # Largura máxima do container em pixels.
-                                      # Base usada para calcular imagens responsivas e gerar URLs de imagem corretas.
-                                      # Ex: se o container for 480px, a imagem redimensionada será gerada até esse limite.
-
-        pixel_densities=[1],         # Lista de densidades de pixel suportadas.
-                                      # 1 → densidade padrão (não gera versão retina)
-                                      # Se fosse [1, 2], seriam geradas duas versões: padrão e 2x (retina)
-                                      # Útil para sites que querem imagens mais nítidas em telas de alta resolução.
+        upload_to=get_file_path,
+        width_field="image_width",
+        height_field="image_height",
+        aspect_ratios=[None, "1/1"],
+        breakpoints={},
+        file_types=["PNG"],
+        grid_columns=1,
+        container_width=480,
+        pixel_densities=[1],
     )
-
+    # 'PictureField' é um campo especial para imagens responsivas.
+    # - 'upload_to': usa a função get_file_path para gerar nomes únicos.
+    # - 'width_field' e 'height_field': armazenam dimensões reais.
+    # - 'aspect_ratios': define proporções permitidas (aqui qualquer proporção ou quadrado).
+    # - 'breakpoints': versões diferentes para responsividade (aqui vazio).
+    # - 'file_types': apenas PNG é aceito.
+    # - 'grid_columns': usado no layout responsivo.
+    # - 'container_width': largura máxima considerada.
+    # - 'pixel_densities': define versões retina (1 = normal apenas).
 
     image_width = models.PositiveIntegerField(
-        null=True,  # Pode ser nulo
-        blank=True  # Pode ficar em branco
+        null=True,
+        # blank=True
     )
     image_height = models.PositiveIntegerField(
         null=True,
-        blank=True
+        # blank=True
     )
+    # Esses campos armazenam largura/altura reais da imagem.
+    # São preenchidos automaticamente pelo PictureField.
 
-    facebook = models.CharField('Facebook', max_length=100, default='#')   # Link do Facebook
-    twitter = models.CharField('X', max_length=100, default='#')           # Link do Twitter/X
-    instagram = models.CharField('Instagram', max_length=100, default='#') # Link do Instagram
+    facebook = models.CharField('Facebook', max_length=100, default='#')
+    twitter = models.CharField('X', max_length=100, default='#')
+    instagram = models.CharField('Instagram', max_length=100, default='#')
+    # Links para redes sociais do membro.
+    # 'default="#"' → evita campo vazio (link neutro).
 
     class Meta:
         verbose_name = 'Pessoa'
         verbose_name_plural = 'Pessoas'
 
-    # ------------------------------------------------------------------
-    # Metodo para retornar URL da imagem
-    # ------------------------------------------------------------------
     def imagem_480_url(self):
         """
-        Retorna a URL pública da imagem.
+        Retorna a URL pública da imagem principal.
         Se não houver imagem, retorna None.
         """
-        if self.imagem:           # Verifica se existe imagem associada
-            return self.imagem.url # Retorna URL pública (GCS ou local)
-        return None               # Sem imagem, retorna None
+        if self.imagem:
+            return self.imagem.url
+        return None
 
     def __str__(self):
-        """
-        Representação em string do objeto (ex: no admin)
-        """
         return self.nome
+        # Representação amigável → nome da pessoa.

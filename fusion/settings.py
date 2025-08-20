@@ -3,141 +3,169 @@
 # =============================================
 
 import os
-# Permite interagir com o sistema operacional:
-# - ler variáveis de ambiente (os.environ)
-# - criar/verificar pastas e arquivos
-# - manipular caminhos com os.path
+# Importa o módulo padrão do Python chamado "os".
+# Este módulo fornece funções para interagir com o sistema operacional.
+# Exemplos:
+#   - os.environ → acessa variáveis de ambiente
+#   - os.path → manipula caminhos de arquivos/pastas
+#   - os.mkdir, os.remove → criar ou remover diretórios/arquivos
 
 from pathlib import Path
-# Classe orientada a objetos para caminhos
-# Permite escrever BASE_DIR / 'templates' de forma segura e multiplataforma
+# Importa a classe Path do módulo "pathlib".
+# Path é uma classe orientada a objetos para lidar com caminhos de arquivos e diretórios.
+# Diferente de os.path, ela usa operadores (/) de forma intuitiva para concatenar caminhos.
+# Exemplo: BASE_DIR / "templates" em vez de os.path.join(BASE_DIR, "templates").
 
 import dj_database_url
-# Converte uma URL de banco (ex: postgres://user:pass@host:port/db) em dict compatível com Django
-# Útil para Heroku, Render e outras plataformas de cloud
+# Importa a biblioteca "dj_database_url", externa ao Django.
+# Essa biblioteca transforma uma URL de conexão de banco de dados em um dicionário de configuração
+# no formato esperado pelo Django.
+# Exemplo: converte "postgres://user:senha@host:5432/dbname" em DATABASES['default'].
 
 from google.oauth2 import service_account
-# Cria objetos de credenciais do Google Cloud a partir de arquivos JSON de Service Account
-# Necessário para autenticar uploads para GCS
+# Importa a classe service_account do módulo google.oauth2 (Google SDK).
+# Permite carregar credenciais de autenticação de um arquivo JSON de "Service Account" do Google Cloud.
+# Essas credenciais são usadas para acessar serviços como o Google Cloud Storage (GCS).
 
 RENDER = os.environ.get('RENDER') == 'TRUE'
-# Flag booleana para detectar se o app está rodando em Render.com
+# Cria a variável booleana RENDER.
+# - Busca a variável de ambiente "RENDER".
+# - Se o valor for a string "TRUE", a variável será True, senão será False.
+# Serve para detectar se o app está rodando na plataforma Render.com.
 
 DEBUG = not RENDER
-# DEBUG=True em dev: mostra erros detalhados, permite runserver servir arquivos estáticos
-# DEBUG=False em prod: oculta erros, obrigatório por segurança
+# Cria a variável DEBUG.
+# DEBUG é True quando RENDER for False (modo de desenvolvimento).
+# DEBUG é False quando RENDER for True (modo de produção).
+# Em DEBUG=True:
+#   - Django mostra páginas de erro detalhadas.
+#   - Django serve arquivos estáticos diretamente.
+# Em DEBUG=False:
+#   - Páginas de erro são ocultadas.
+#   - Necessário servidor/provedor para arquivos estáticos.
+#   - Mais seguro para produção.
 
 # ---------------------------------------------------
 # URL padrão do banco para desenvolvimento local
 # ---------------------------------------------------
-# Aqui estamos usando PostgreSQL local
-# Formato: postgresql://usuario:senha@host:porta/nome_do_banco
 LOCAL_DATABASE_URL = 'postgresql://jcog:MON010deo010@localhost:5432/fusion'
+# String de conexão para PostgreSQL local.
+# Formato: postgresql://usuario:senha@host:porta/nome_do_banco
+# Usada como banco padrão durante desenvolvimento.
 
 # ---------------------------------------------------
 # Configuração do banco de dados
 # ---------------------------------------------------
 if DEBUG:
-    # -------------------------
-    # Desenvolvimento local
-    # -------------------------
+    # Se DEBUG=True, significa que o projeto está em ambiente de desenvolvimento.
+
     DATABASES = {
         'default': dj_database_url.config(
             default=LOCAL_DATABASE_URL,
-            # Se não existir a variável de ambiente DATABASE_URL, usa LOCAL_DATABASE_URL
+            # Se não existir a variável de ambiente DATABASE_URL, usa LOCAL_DATABASE_URL.
             conn_max_age=600,
-            # Mantém a conexão aberta por 600 segundos (10 minutos)
-            # Evita overhead de criar uma conexão nova a cada requisição
+            # Mantém conexões abertas por até 600 segundos (10 minutos).
+            # Isso evita recriar conexão a cada requisição (ganho de performance).
             ssl_require=False
-            # Não exige SSL em localhost
-            # SSL é desnecessário no ambiente local
+            # Não exige SSL em localhost (ambiente de desenvolvimento).
         )
     }
 else:
-    # -------------------------
-    # Produção
-    # -------------------------
+    # Se DEBUG=False, significa que o projeto está em ambiente de produção.
+
     DATABASES = {
         'default': dj_database_url.config(
-            # DATABASE_URL deve estar definida no ambiente de produção (Render, Heroku, etc.)
             default=LOCAL_DATABASE_URL,
-            # Se DATABASE_URL não existir, ainda usamos a URL local como fallback
+            # Caso DATABASE_URL não esteja definida no ambiente, ainda usa LOCAL_DATABASE_URL como fallback.
             conn_max_age=600,
-            # Mantém conexões abertas por 10 minutos
+            # Mantém conexões abertas por até 10 minutos em produção.
             ssl_require=True
-            # Exige SSL em produção
-            # Isso garante que a conexão com o banco remoto seja criptografada
-            # Evita problemas de segurança ao enviar dados sensíveis
+            # Exige SSL na conexão com o banco de dados em produção.
+            # Isso garante criptografia entre servidor e banco remoto.
         )
     }
-# ---------------------------------------------------
+
 # Explicação detalhada de cada parâmetro:
-# ---------------------------------------------------
-# default: URL de conexão do banco de dados, caso DATABASE_URL não exista
-# conn_max_age: tempo (em segundos) para reutilizar conexões abertas
-# ssl_require: se True, força conexão SSL; se False, permite conexão sem SSL
-# dj_database_url.config(): converte uma URL do banco em dicionário que Django entende
-# DATABASES['default']: dicionário principal de configuração do Django para o banco
+# - default: URL do banco usada caso a variável DATABASE_URL não exista.
+# - conn_max_age: tempo de reuso das conexões abertas.
+# - ssl_require: se True, obriga conexão criptografada via SSL.
+# - dj_database_url.config(): converte URL de banco para dict no formato esperado por Django.
+# - DATABASES['default']: dicionário de configuração usado pelo Django para conectar ao banco.
 
 # =============================================
 # BASE_DIR
 # =============================================
 BASE_DIR = Path(__file__).resolve().parent.parent
-# Caminho absoluto para a raiz do projeto (onde está manage.py)
-# - __file__ é o caminho deste arquivo settings.py
-# - .resolve() transforma em caminho absoluto
-# - .parent.parent sobe até a raiz do projeto
-# Evita hardcoding de caminhos e facilita portabilidade
+# BASE_DIR aponta para a pasta raiz do projeto (onde está manage.py).
+# __file__: caminho absoluto deste arquivo settings.py.
+# .resolve(): converte em caminho absoluto, resolvendo links simbólicos.
+# .parent: sobe um nível (do arquivo para a pasta do app).
+# .parent.parent: sobe outro nível, até a raiz do projeto.
+# Isso evita caminhos fixos no código e torna o projeto portátil.
 
 # =============================================
 # SEGURANÇA
 # =============================================
 SECRET_KEY = 'django-insecure-9ws=#c@fv-y%#a3%b8ua422auu)#eq5$m%93tc0kv3d*ih8#vj'
-# Chave secreta do Django
-# - Usada para sessões, CSRF e hashes internos
-# - Não deve ser versionada em produção
+# Chave secreta do Django.
+# Usada internamente para:
+#   - Assinar cookies de sessão.
+#   - Proteger formulários CSRF.
+#   - Criar hashes criptográficos.
+# Deve ser mantida em segredo em produção (ideal em variável de ambiente).
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-# Inicializa a lista de domínios/hosts que o Django aceitará para requisições HTTP
-# Evita ataques do tipo "Host header injection" ao recusar requests vindos de domínios não autorizados
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+# Lista de hosts/domínios autorizados a acessar o projeto.
+# Protege contra ataque "Host header injection".
+# Durante desenvolvimento, aceita localhost, 127.0.0.1 e testserver (para testes).
+
 if not DEBUG:
-    # Executa este bloco somente em produção (DEBUG=False)
+    # Só executa este bloco se for produção (DEBUG=False).
+
     external = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
-    # Obtém o hostname público fornecido automaticamente pelo Render.com para este serviço
-    # Ex.: 'meu-app-xyz.onrender.com'
+    # Captura o hostname externo fornecido pela Render.com.
+    # Exemplo: "meu-app-xyz.onrender.com".
 
     if external:
         ALLOWED_HOSTS.append(external)
-        # Adiciona o hostname público à lista de hosts permitidos
-        # Isso garante que o site acessível pela internet seja reconhecido pelo Django
+        # Adiciona o hostname externo válido à lista de hosts permitidos.
 
     ALLOWED_HOSTS.append('.onrender.com')
-    # Adiciona um curinga para permitir qualquer subdomínio de onrender.com (*.onrender.com)
-    # Útil se o app estiver disponível em múltiplos subdomínios gerenciados pelo Render
+    # Permite qualquer subdomínio do domínio onrender.com (*.onrender.com).
+    # Útil se a aplicação for acessada por múltiplos subdomínios no Render.
 
 # =============================================
 # INSTALLED_APPS
 # =============================================
 INSTALLED_APPS = [
-    # Apps padrões do Django
-    'django.contrib.admin',  # painel de administração
-    'django.contrib.auth',  # autenticação de usuários
-    'django.contrib.contenttypes',  # tipos de conteúdo genéricos
-    'django.contrib.sessions',  # sessões de usuário
-    'django.contrib.messages',  # mensagens flash
-    'django.contrib.staticfiles',  # arquivos estáticos
+    'django.contrib.admin',
+    # Admin: interface administrativa do Django.
+    'django.contrib.auth',
+    # Auth: sistema de autenticação de usuários e permissões.
+    'django.contrib.contenttypes',
+    # Contenttypes: sistema de tipos de conteúdo genérico, usado por permissões.
+    'django.contrib.sessions',
+    # Sessions: armazena dados de sessão de usuários.
+    'django.contrib.messages',
+    # Messages: sistema de mensagens "flash".
+    'django.contrib.staticfiles',
+    # Staticfiles: gerenciamento de arquivos estáticos (CSS, JS, imagens).
 
-    # Apps do projeto
-    'core',  # app principal do projeto
-    'bootstrap4',  # integração com Bootstrap 4
-    'stdimage',  # thumbnails automáticos
-    'pictures',  # imagens responsivas
-    'storages'  # integração com storage remoto (GCS, S3)
+    'core',
+    # App principal do projeto (definido pelo desenvolvedor).
+    'bootstrap4',
+    # Integração de templates com Bootstrap 4.
+    'stdimage',
+    # Biblioteca para manipulação de imagens e thumbnails.
+    'pictures',
+    # Geração de imagens responsivas (diferentes tamanhos para diferentes dispositivos).
+    'storages'
+    # Biblioteca django-storages, para integrar armazenamento remoto (S3, GCS).
 ]
 # Cada app registrado:
-# - executa ready()
-# - registra models
-# - disponibiliza staticfiles e templates
+# - É inicializado automaticamente quando o servidor sobe.
+# - Registra seus models.
+# - Disponibiliza templates, arquivos estáticos e signals.
 
 # =============================================
 # MIDDLEWARE
@@ -145,194 +173,182 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     # Middleware de segurança do Django.
-    # Adiciona headers HTTP de proteção, como HSTS, X-Content-Type-Options, X-XSS-Protection.
-    # Ajuda a proteger a aplicação contra ataques comuns.
+    # Adiciona headers HTTP de segurança (HSTS, X-Content-Type-Options).
+    # Protege contra ataques como XSS, MIME sniffing, etc.
 
     'django.contrib.sessions.middleware.SessionMiddleware',
-    # Middleware de sessões do Django.
-    # Habilita o uso de request.session para armazenar dados temporários do usuário.
-    # Deve vir antes do AuthenticationMiddleware, pois ele depende das sessões.
+    # Middleware de sessões.
+    # Habilita request.session para armazenar dados temporários do usuário.
 
     'django.middleware.common.CommonMiddleware',
-    # Middleware com funcionalidades comuns de utilidade.
-    # Inclui suporte a APPEND_SLASH, redirecionamentos automáticos e tratamento de ETags.
+    # Middleware de utilidades comuns.
+    # Exemplo: adiciona barra final às URLs se faltando (APPEND_SLASH).
 
     'django.middleware.csrf.CsrfViewMiddleware',
     # Middleware de proteção CSRF (Cross-Site Request Forgery).
-    # Garante que requisições POST, PUT e DELETE venham de fontes confiáveis.
-    # Adiciona e valida o token CSRF automaticamente.
+    # Valida o token CSRF em formulários POST/PUT/DELETE.
 
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     # Middleware de autenticação.
-    # Adiciona request.user, permitindo identificar o usuário logado em cada requisição.
-    # Depende de SessionMiddleware para funcionar corretamente.
+    # Adiciona request.user com o usuário logado (ou AnonymousUser).
 
     'django.contrib.messages.middleware.MessageMiddleware',
     # Middleware de mensagens "flash".
-    # Permite enviar mensagens temporárias entre requests, integrando com templates e exibição de alertas.
+    # Usa sessões para armazenar mensagens temporárias entre requests.
 
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     # Middleware anti-clickjacking.
-    # Adiciona o header X-Frame-Options para evitar que páginas do site sejam exibidas dentro de iframes de terceiros.
-    # Normalmente configurado como SAMEORIGIN.
+    # Adiciona cabeçalho X-Frame-Options: SAMEORIGIN.
+    # Impede que a página seja embutida em iframes externos.
 ]
-# Middleware processa cada request/response
-# Ordem importante:
-# - SessionMiddleware antes de AuthMiddleware
-# - CSRF verifica POST/PUT/DELETE
-# - SecurityMiddleware adiciona headers de proteção
+# Ordem dos middlewares é importante:
+# - SessionMiddleware deve vir antes de AuthenticationMiddleware.
+# - CSRF precisa vir antes de views que validam POST.
+# - SecurityMiddleware sempre no topo para aplicar regras cedo.
 
 # =============================================
 # URLS E TEMPLATES
 # =============================================
 ROOT_URLCONF = 'fusion.urls'
-# Define o módulo raiz de URLs do projeto
+# Aponta para o módulo de configuração de URLs do projeto (fusion/urls.py).
+# Este módulo contém urlpatterns que roteiam requisições para views.
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],  # procura templates fora dos apps
-        'APP_DIRS': True,  # procura templates dentro de cada app
+        # Define o mecanismo de templates usado: DjangoTemplates (motor nativo do Django).
+        'DIRS': [BASE_DIR / 'templates'],
+        # Lista de diretórios adicionais para procurar templates fora dos apps.
+        'APP_DIRS': True,
+        # Se True, procura templates automaticamente em cada app instalado (pasta /templates).
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.request',
-                # Adiciona 'request' nos templates
+                # Insere o objeto request em todos os templates.
                 'django.contrib.auth.context_processors.auth',
-                # Adiciona 'user' e 'perms' nos templates
+                # Insere variáveis user e perms nos templates.
                 'django.contrib.messages.context_processors.messages',
-                # Adiciona mensagens flash nos templates
+                # Insere mensagens flash nos templates.
             ],
         },
     },
 ]
-# Context processors inserem variáveis globais nos templates
+# Context processors são funções que inserem variáveis globais nos templates.
+# Permitem usar objetos como request, user e messages diretamente no HTML.
 
 # =============================================
 # CONFIGURAÇÃO DA BIBLIOTECA PICTURES
 # =============================================
 PICTURES = {
     "BREAKPOINTS": {'thumb': 480, "mobile": 576, "tablet": 768, "desktop": 992},
-    # Define larguras de referência para gerar imagens responsivas
+    # Define larguras de tela (em pixels) para gerar versões diferentes das imagens.
     "GRID_COLUMNS": 1,
-    # Número de colunas lógicas do grid
+    # Número de colunas lógicas do grid.
     "CONTAINER_WIDTH": 480,
-    # Largura máxima de container usada no cálculo das imagens
+    # Largura máxima do container.
     "FILE_TYPES": ["WEBP", "JPG", "JPEG", "BMP", "PNG"],
-    # Formatos suportados
+    # Formatos de arquivos de imagem suportados.
     "PIXEL_DENSITIES": [1],
-    # Densidade de pixels (1x, 2x etc.)
+    # Escalas de densidade (1x, 2x, etc).
     "USE_PLACEHOLDERS": True,
-    # Cria placeholders para melhor UX ao carregar imagens
+    # Ativa placeholders enquanto imagens reais carregam.
 }
 
 # =============================================
 # WSGI
 # =============================================
 WSGI_APPLICATION = 'fusion.wsgi.application'
-# Entry point WSGI que servidores como gunicorn/uwsgi usam para servir o app
+# Caminho para o objeto WSGI da aplicação.
+# Servidores como Gunicorn e uWSGI usam este objeto para servir o projeto.
 
 # =============================================
 # VALIDADORES DE SENHA
 # =============================================
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
-    # Evita senhas semelhantes a atributos do usuário
+    # Validador: proíbe senhas parecidas com atributos do usuário (nome, email).
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
-    # Exige comprimento mínimo de senha
+    # Validador: exige comprimento mínimo de senha (padrão 8).
     {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
-    # Bloqueia senhas muito comuns
+    # Validador: bloqueia senhas comuns (ex: "123456", "password").
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
-    # Bloqueia senha composta só por números
+    # Validador: bloqueia senhas compostas apenas por números.
 ]
 
 # =============================================
 # INTERNACIONALIZAÇÃO
 # =============================================
 LANGUAGE_CODE = 'pt-br'
-# Idioma padrão do projeto
+# Define idioma padrão como português do Brasil.
 
 TIME_ZONE = 'America/Sao_Paulo'
-# Fuso horário padrão do projeto
+# Define fuso horário padrão (São Paulo, Brasil).
 
 USE_I18N = True
-# Ativa o mecanismo de internacionalização
+# Ativa suporte à internacionalização (tradução de textos).
 
 USE_TZ = True
-# Armazena datetimes em UTC no banco e converte para timezone local ao exibir
+# Usa fuso horário UTC no banco de dados e converte para local quando necessário.
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-# Define o tipo padrão de campo para chaves primárias automáticas.
+# Define o tipo padrão de campo para chaves primárias.
+# BigAutoField cria IDs longos (64 bits).
 
 # -------------------------------------------------------------------
 # Configuração para autenticação e acesso ao Google Cloud Storage (GCS)
 # -------------------------------------------------------------------
 
 path_credenciais = None
-# path_credenciais é o caminho para o arquivo de credenciais JSON, o qual contém as credenciais para acessar o bucket do Google Cloud
+# Variável para armazenar caminho do arquivo JSON de credenciais do Google Cloud.
 
 filename = "credenciais.json"
-# Nome do arquivo de credenciais
+# Nome esperado do arquivo de credenciais JSON.
 
 GS_CREDENTIALS = None
-# Objeto contendo as credenciais propriamente ditas
+# Variável para armazenar objeto de credenciais carregado.
 
 if not DEBUG:
-    # Se a aplicação estiver em produção
+    # Caso esteja em produção (DEBUG=False):
 
     path_credenciais = "/etc/secrets/" + filename
-    # Caminho para o arquivo de credenciais no ambiente do Render
+    # Caminho fixo em produção (Render.com monta credenciais em /etc/secrets).
 
-    if os.path.exists(path_credenciais): # se o caminho path_credenciais aponta para o arquivo cujo nome é filename
-        # print(f"O arquivo {path_credenciais} existe!")
-
+    if os.path.exists(path_credenciais):
         GS_CREDENTIALS = service_account.Credentials.from_service_account_file(path_credenciais)
-        # Carrega as credenciais do arquivo JSON utilizando a classe service_account.
-        # O metodo from_service_account_file lê o arquivo JSON e retorna um objeto credencial: GS_CREDENTIALS
-
+        # Carrega credenciais a partir do arquivo JSON.
+        # from_service_account_file retorna objeto GS_CREDENTIALS.
     else:
         raise Exception(f"O arquivo {path_credenciais} não existe!")
-        # Retorna uma exceção mostrando que path_credenciais não aponta para o arquivo JSON
+        # Se arquivo não for encontrado, lança exceção crítica.
 
 else:
+    # Caso esteja em desenvolvimento (DEBUG=True):
+
     path_credenciais = os.path.join(BASE_DIR, filename)
-    # Caminho para o arquivo de credenciais no ambiente local
+    # Procura credenciais na raiz do projeto (local).
 
-    if os.path.exists(path_credenciais): # se o caminho path_credenciais aponta para o arquivo cujo nome é filename
-        # print(f"O arquivo {path_credenciais} existe!")
-
+    if os.path.exists(path_credenciais):
         GS_CREDENTIALS = service_account.Credentials.from_service_account_file(path_credenciais)
-        # Carrega as credenciais do arquivo JSON utilizando a classe service_account.
-        # O metodo from_service_account_file lê o arquivo JSON e retorna um objeto credencial: GS_CREDENTIALS
-
+        # Carrega credenciais a partir do arquivo JSON.
     else:
         raise Exception(f"O arquivo {path_credenciais} não existe!")
-        # Retorna uma exceção mostrando que path_credenciais não aponta para o arquivo JSON
+        # Se não encontrar arquivo local, lança exceção.
 
 # -------------------------------------------------------------------
 # Configurações do Google Cloud Storage para arquivos estáticos e mídia
 # -------------------------------------------------------------------
 
 GS_BUCKET_NAME = "django-render"
-# Nome do bucket no Google Cloud Storage onde os arquivos serão armazenados.
-
-# ---------- INÍCIO DA CONFIGURAÇÃO CONDICIONAL PARA AMBIENTES ----------
-
-# Abaixo implementamos uma diferenciação entre o ambiente de produção (quando DEBUG = False)
-# e o ambiente de desenvolvimento local (DEBUG = True), para que localmente os arquivos estáticos e de mídia
-# sejam armazenados e servidos pelo sistema de arquivos local, facilitando o desenvolvimento e testes.
-# Já em produção, os arquivos serão armazenados e servidos pelo bucket do Google Cloud Storage (GCS).
-#
-# Isso resolve o problema onde, localmente, a aplicação tentava enviar arquivos estáticos diretamente para o GCS,
-# o que pode não ser desejável ou configurado para funcionar no ambiente local.
-#
-# Essa abordagem permite que:
-# - No desenvolvimento local, arquivos estáticos e mídia sejam facilmente acessados e modificados localmente.
-# - Na produção, o uso do armazenamento em nuvem garante alta disponibilidade e escalabilidade.
+# Nome do bucket no Google Cloud Storage que armazenará arquivos estáticos e mídia.
 
 if not DEBUG:
+    # Em produção:
+
     STATIC_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/static/"
+    # URL pública para arquivos estáticos (servidos pelo GCS).
+
     MEDIA_URL = f"https://storage.googleapis.com/{GS_BUCKET_NAME}/media/"
-    # URLs públicas para acesso direto a arquivos estáticos e de mídia hospedados no bucket GCS.
+    # URL pública para arquivos de mídia.
 
     STORAGES = {
         "default": {
@@ -352,75 +368,45 @@ if not DEBUG:
             },
         },
     }
-    # Configuração que o Django usa para definir como e onde ele vai armazenar arquivos — principalmente arquivos estáticos (CSS, JS, imagens do layout)
-    # e arquivos de mídia (imagens, documentos enviados pelo usuário).
-    # Quando você usa armazenamento em nuvem — aqui, o Google Cloud Storage (GCS) — o Django precisa saber:
-    # 1) Qual é o backend de armazenamento (no caso, o storages.backends.gcloud.GoogleCloudStorage, que é a integração do Django com o Google Cloud Storage)
-    # 2) Em qual bucket os arquivos vão ser guardados (bucket_name)
-    # 3) Quais credenciais usar para autenticar e ter permissão de acessar esse bucket (credentials)
-    # 4) E uma "pasta" (localização) dentro do bucket para organizar os arquivos (location), por exemplo "media" para arquivos de mídia e "static" para arquivos estáticos
-    # O que significa cada chave?
-    # "default": define o armazenamento padrão para arquivos de mídia enviados pelo usuário (exemplo: fotos enviadas, PDFs etc)
-    # "staticfiles" — define o armazenamento para arquivos estáticos do seu site (exemplo: CSS, JavaScript, imagens do tema)
-    # Cada um aponta para o mesmo bucket, mas em locais diferentes (location: "media" e location: "static"),
-    # assim os arquivos ficam organizados separadamente dentro do bucket.
-
-    # ---------- CONFIGURAÇÃO PARA PRODUÇÃO NO GCS ---------- #
+    # STORAGES define como arquivos estáticos e de mídia serão salvos/servidos.
+    # "default": armazena arquivos de mídia enviados por usuários.
+    # "staticfiles": armazena arquivos estáticos do projeto (CSS, JS).
+    # Ambos usam o mesmo bucket, mas organizados em subpastas ("media" e "static").
 
     DEFAULT_FILE_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-    # É uma configuração do Django que define qual backend de armazenamento será usado para arquivos de mídia
-    # (ou seja, arquivos enviados por usuários, como fotos, documentos, etc).
-    # 'storages.backends.gcloud.GoogleCloudStorage' é o backend do pacote django-storages para armazenar arquivos no Google Cloud Storage (GCS).
-    # Quando o Django salva um arquivo de mídia (por exemplo, um upload de imagem),
-    # ele usará esse backend para enviar o arquivo para o bucket configurado no GCS, ao invés de salvar localmente no disco do servidor.
+    # Define backend padrão para uploads de mídia (usuários).
 
     STATICFILES_STORAGE = 'storages.backends.gcloud.GoogleCloudStorage'
-    # Define qual backend será usado para armazenar e servir os arquivos estáticos (CSS, JavaScript, imagens fixas usadas pelo site).
-    # Também aponta para o backend do GCS. Isso indica que, quando você executar o comando collectstatic do Django,
-    # os arquivos estáticos serão enviados para o bucket no Google Cloud, ao invés de serem guardados localmente.
+    # Define backend para arquivos estáticos (CSS/JS).
 
 else:
+    # Em desenvolvimento local:
+
     STATIC_URL = '/static/'
-    # Define a URL base para acessar os arquivos estáticos localmente, ou seja, quando você estiver desenvolvendo ou rodando o projeto em modo debug (não em produção).
+    # URL para acessar arquivos estáticos localmente.
 
     MEDIA_URL = '/media/'
-    # Define a URL base para acessar arquivos de mídia (uploads de usuários) localmente.
+    # URL para acessar arquivos de mídia localmente.
 
     STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-    # Diretório local no servidor onde o comando collectstatic vai reunir todos os arquivos estáticos do projeto.
-    # Em ambiente local, o Django coleta todos os arquivos estáticos (de apps e pastas STATICFILES_DIRS) e os coloca nessa pasta para serem servidos pelo servidor local.
+    # Pasta local onde collectstatic junta arquivos estáticos.
 
     MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
-    # Diretório local onde o Django salva os arquivos de mídia (uploads de usuários) quando você está rodando o projeto localmente.
-    # Para desenvolvimento local, onde normalmente não se usa armazenamento em nuvem, mas salva arquivos no disco do próprio computador.
-
-    # Pode adicionar diretórios extras para arquivos estáticos, caso use:
-    # STATICFILES_DIRS = [
-        #BASE_DIR / 'core' / 'static',
-    #]
+    # Pasta local para armazenar uploads de usuários.
 
     DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
-    # Define o backend de armazenamento para arquivos de mídia (uploads feitos por usuários) usando o sistema de arquivos local.
-    # Ao invés de enviar para o Google Cloud Storage, o Django vai salvar os arquivos no diretório local definido por MEDIA_ROOT.
-    # Esse é o comportamento padrão do Django quando você não configura nada relacionado a armazenamento em nuvem.
+    # Backend de armazenamento de mídia local (disco do servidor).
 
     STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
-    # Backend padrão para lidar com arquivos estáticos (CSS, JS, imagens do site).
-    # Ao rodar python manage.py collectstatic, todos os arquivos estáticos serão reunidos no diretório local STATIC_ROOT.    #
-    # Eles não serão enviados para um bucket em nuvem.
-    # Esse backend apenas cuida de copiar e organizar os arquivos localmente para que o servidor de desenvolvimento ou um servidor web (como Nginx) possa servi-los.
-
-    # ---------- FIM DA CONFIGURAÇÃO CONDICIONAL PARA AMBIENTES ----------
+    # Backend de armazenamento de arquivos estáticos local.
+    # Copia arquivos para STATIC_ROOT ao rodar collectstatic.
 
     if DEBUG:
         EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+        # Em desenvolvimento: envia emails apenas imprimindo no console.
 
     LOGOUT_REDIRECT_URL = 'index'
-
-    # Comentários adicionais:
-    # Ao executar o comando 'python manage.py collectstatic', o Django irá coletar
-    # os arquivos estáticos de todos os apps instalados e também de STATICFILES_DIRS
-    # e armazená-los em STATIC_ROOT para posteriormente fazer upload no bucket.
+    # URL para redirecionar após logout.
 
     """
     EMAIL_HOST = 'localhost'
@@ -429,5 +415,5 @@ else:
     EMAIL_HOST_PASSWORD = '<PASSWORD>'
     EMAIL_HOST_USER = 'no-reply@seudominio.com'
     """
-    # Configurações de email, atualmente comentadas.
-    # Servem para enviar emails via servidor SMTP, como confirmação de cadastro, reset de senha, etc.
+    # Configurações de envio de email via SMTP (comentadas).
+    # Usadas para funcionalidades como reset de senha.
