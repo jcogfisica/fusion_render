@@ -1,12 +1,14 @@
 @font-face {
-  font-family: 'LineIcons';
-  src: url('/static/fonts/LineIcons.eot');
-  src: url('/static/fonts/LineIcons.eot?#iefix') format('embedded-opentype'),
-       url('/static/fonts/LineIcons.woff') format('woff'),
-       url('/static/fonts/LineIcons.ttf') format('truetype'),
-       url('/static/fonts/LineIcons.svg#LineIcons') format('svg');
-  font-weight: normal;
-  font-style: normal;
+    font-family: 'LineIcons';
+    /* Caminho absoluto para garantir que o navegador encontre a fonte */
+    src: url('/static/fonts/LineIcons.eot'); /* IE9 Compat Modes */
+    src: url('/static/fonts/LineIcons.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+         url('/static/fonts/LineIcons.woff') format('woff'), /* Modern Browsers */
+         url('/static/fonts/LineIcons.ttf') format('truetype'), /* Safari, Android, iOS */
+         url('/static/fonts/LineIcons.svg#LineIcons') format('svg'); /* Legacy iOS */
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap; /* Evita "flash of invisible text" */
 }
 
 [class^="lni-"], [class*=" lni-"] {
