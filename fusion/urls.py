@@ -30,6 +30,12 @@ from django.conf.urls.static import static
 # Importa as configurações do projeto (definidas no settings.py) para acessar MEDIA_URL e MEDIA_ROOT
 from django.conf import settings
 
+# Importa o módulo `views` do app `django.contrib.auth`, que contém várias views prontas relacionadas a autenticação.
+# Aqui ele é importado com o alias `auth_views` para evitar conflito de nomes e deixar o código mais legível.
+# Dentro de `auth_views` temos classes como `LoginView`, `LogoutView`, `PasswordResetView`, etc.
+# Essas views já implementam o comportamento padrão de login/logout, sem que precisemos criar views manuais.
+from django.contrib.auth import views as auth_views
+
 # Lista obrigatória que mapeia padrões de URL para views
 # Cada entrada dessa lista indica: "Se o usuário acessar essa URL, execute essa view"
 urlpatterns = [
@@ -51,6 +57,21 @@ urlpatterns = [
     # 2. Preview de imagens ou URLs resolvidas automaticamente: Algumas views internas do pacote são usadas para servir essas
     # imagens em tempo real (por exemplo, para admin ou frontend dinâmico).
     path('pictures/', include('pictures.urls'))
+]
+
+# Define uma rota que corresponde ao caminho `/admin/logout/` da aplicação.
+    # - O primeiro argumento `"admin/logout/"` é a string que representa a URL.
+    # - O segundo argumento é a view que será chamada quando essa URL for acessada.
+    #
+    # `auth_views.LogoutView` é uma *class-based view* (view baseada em classe).
+    # Como toda view baseada em classe, precisamos chamá-la com `.as_view()` para convertê-la
+    # em uma função que o Django pode usar como view (essa função gerada processa a requisição e retorna uma resposta).
+    #
+    # O parâmetro `next_page="index"` sobrescreve a configuração padrão de redirecionamento após o logout.
+    # Isso significa que, depois que o usuário fizer logout, ele será redirecionado para a URL nomeada `index`.
+    # Essa URL precisa estar definida no sistema de rotas do projeto com o nome `index`, normalmente no arquivo `urls.py`.
+urlpatterns += [
+    path("admin/logout/", auth_views.LogoutView.as_view(next_page="index")),
 ]
 
 # Concatenação da lista urlpatterns com rotas extras para servir arquivos de mídia
